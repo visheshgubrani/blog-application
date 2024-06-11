@@ -4,17 +4,29 @@ import asyncHandler from '../utils/asyncHandler.js'
 import jwt from 'jsonwebtoken'
 
 const verifyJwt = asyncHandler(async (req, res, next) => {
-  const token =
-    req.cookies.accessToken ||
-    req.header('Authorization')?.replace('Bearer ', '')
+  try {
+    const token =
+      req.cookies?.accessToken ||
+      req.header('Authorization')?.replace('Bearer ', '')
 
-  if (!token) {
-    throw new ApiError(403, 'Unauthorized Access')
+    if (!token) {
+      throw new ApiError(403, 'Unauthorized Access')
+    }
+
+    const decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET)
+
+    const user = await User.findById(decodedToken?._id).select(
+      '-password -refreshToken',
+    )
+
+    if (!user) {
+      throw new ApiError(500, 'Internal Server Error')
+    }
+    req.user = user
+    next()
+  } catch (error) {
+    next(error)
   }
-
-  const decodedToken = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET)
-
-  const user = await User.findById(decodedToken?._id).select(
-    '-password -refreshToken',
-  )
 })
+
+export default verifyJwt

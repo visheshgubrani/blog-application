@@ -1,5 +1,8 @@
 import app from './app.js'
 import dbClient from './db/dbClient.js'
+import dotenv from 'dotenv'
+
+dotenv.config()
 
 dbClient()
   .then(() => {

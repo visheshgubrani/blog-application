@@ -1,5 +1,5 @@
-import User from '../models/user.model'
-import ApiError from './ApiError'
+import User from '../models/user.model.js'
+import ApiError from './ApiError.js'
 
 const generateTokens = async userId => {
   try {
@@ -13,3 +13,5 @@ const generateTokens = async userId => {
     throw new ApiError('Failed to generate tokens:', error)
   }
 }
+
+export default generateTokens

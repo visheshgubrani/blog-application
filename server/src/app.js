@@ -1,6 +1,10 @@
 import cookieParser from 'cookie-parser'
 import express from 'express'
-import { blogRouter, commentRouter, likeRouter, userRouter } from './routes'
+import userRouter from './routes/user.routes.js'
+import likeRouter from './routes/like.routes.js'
+import commentRouter from './routes/comment.routes.js'
+import blogRouter from './routes/blog.routes.js'
+import cors from 'cors'
 
 const app = express()
 app.use(cors())
@@ -11,8 +15,8 @@ app.use(cookieParser())
 
 // Routes
 app.use('/api/v1/users', userRouter)
-app.use('/api/v1/users', blogRouter)
-app.use('/api/v1/users', commentRouter)
-app.use('/api/v1/users', likeRouter)
+app.use('/api/v1/blogs', blogRouter)
+app.use('/api/v1/comments', commentRouter)
+app.use('/api/v1/likes', likeRouter)
 
 export default app
