@@ -12,6 +12,7 @@ const options = {
 
 const registerUser = asyncHandler(async (req, res) => {
   const { username, email, fullName, password, bio } = req.body
+  console.log(req.body)
   if (!(username && email && fullName && password)) {
     throw new ApiError(400, 'Please Enter all fields')
   }
@@ -106,4 +107,60 @@ const logoutUser = asyncHandler(async (req, res) => {
     .json(new ApiResponse(200, 'User Logged Out Successfully', {}))
 })
 
+const refreshAccessToken = asyncHandler(async (req, res) => {
+  const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken
+  if (!incomingRefreshToken) {
+    throw new ApiError(401, 'Unauthorized Request')
+  }
+
+  try {
+    const decodedToken = jwt.verify(
+      incomingRefreshToken,
+      process.env.REFRESH_TOKEN_SECRET,
+    )
+
+    const user = await User.findById(decodedToken?._id)
+
+    if (!user) {
+      throw new ApiError(401, 'Invalid Refresh Token')
+    }
+
+    if (incomingRefreshToken !== user?.refreshToken) {
+      throw new ApiError(401, 'Refresh Token is expired or used')
+    }
+
+    const { accessToken, newRefreshToken } = await generateTokens(user._id)
+
+    return res
+      .status(200)
+      .cookie('accessToken', accessToken, options)
+      .cookie('refreshToken', newRefreshToken, options)
+      .json(
+        new ApiResponse(
+          200,
+          { accessToken, refreshToken: newRefreshToken },
+          'Access Token Refreshed',
+        ),
+      )
+  } catch (error) {
+    throw new ApiError(401, error?.message || 'Invalid Refresh Token')
+  }
+})
+
+const changeCurrentPassword = asyncHandler(async (req, res) => {
+  const { oldPassword, newPassword } = req.body
+  const user = await User.findById(req.user?._id)
+  const isPasswordCorrect = await user.isPasswordCorrect(oldPassword)
+
+  if (!isPasswordCorrect) {
+    throw new ApiError(400, 'Please Enter the correct password')
+  }
+
+  user.password = newPassword
+  user.save({ validateBeforeSave: false })
+
+  return res
+    .status(200)
+    .json(new ApiResponse(200, 'Password Changed Successfully', {}))
+})
 export { registerUser, loginUser, logoutUser }

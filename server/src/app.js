@@ -7,7 +7,12 @@ import blogRouter from './routes/blog.routes.js'
 import cors from 'cors'
 
 const app = express()
-app.use(cors())
+app.use(
+  cors({
+    origin: '*',
+    credentials: true,
+  }),
+)
 app.use(express.json({ limit: '32kb' }))
 app.use(express.urlencoded({ extended: true, limit: '16kb' }))
 app.use(express.static('public'))
